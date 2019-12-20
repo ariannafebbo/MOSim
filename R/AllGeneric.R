@@ -168,6 +168,24 @@ setGeneric("simulateParams", function(object, simulation, counts, profiles, grou
 setGeneric("adjustProfiles", function(object, simulation, profiles, step) standardGeneric("adjustProfiles"))
 
 
+#' adjustDataDepth
+#'
+#' @rdname Generics
+#' @section Simulator methods:
+#'
+#' Adjust the depth of the count data by taking into account the differences
+#' between columns.
+#'
+#' @param object Instance of MOSimulator class.
+#' @param countData Data frame with count data to adjust.
+#'
+#' @return The data.frame count data with the correct depth adjustment.
+#' @keywords internal
+#' @noRd
+#'
+setGeneric("adjustDataDepth", function(object, countData) standardGeneric("adjustDataDepth"))
+
+
 ################################################################################
 # MOSimulatorRegion
 ################################################################################

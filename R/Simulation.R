@@ -184,6 +184,7 @@ setMethod("initialize", signature="MOSimulation", function(.Object, ...) {
                 stop("There are no DEG profiles available, please increase the amount of DE genes.")
 
 
+
         # Assign a random "Tmax" for transitory profiles
 
         # Declare helper variable
@@ -193,6 +194,41 @@ setMethod("initialize", signature="MOSimulation", function(.Object, ...) {
             profilesDE[, paste0("Tmax.Group", g)] <- ifelse(grepl("transitory", profilesDE[, 2 + g]), # Third column = Group 1
                                                             stats::runif(nrow(profilesDE), min = 0.25 * tmax.T, max = 0.75 * tmax.T),
                                                             NA)
+        }
+
+
+        # Set correct colnames
+        # Important: pattern "Group[n]" is used to subset with dplyr later
+        colNames <- paste0("Group", seq_len(.Object@numberGroups))
+
+        # Symbols needed to split the DF by dplyr
+        dplyrGroup <- lapply(colNames, as.symbol)
+
+        colnames(profilesDE) <- c("ID", "DE", colNames, utils::tail(colnames(profilesDE), .Object@numberGroups))
+
+        if (.Object@numberGroups > 1) {
+            # Determine the rows with the same condition on all columns
+            # Change only base count values when the profiles are flat on all conditions,
+            # otherwise they are already DE genes.
+            # sameCond <- apply(apply(dplyr::select(profilesDE, dplyr::starts_with("Group")), 2, '==', 'flat'), 1, all)
+            sameCond <- dplyr::select(profilesDE, dplyr::starts_with("Group")) %>%
+                purrr::map(`==`, 'flat') %>%
+                purrr::pmap_lgl(all)
+
+            # The number of DEG FL genes must be even to compensate up with down. If not, add an aditional DEG from
+            # the nonDE pool.
+            # if (sum(sameCond) %% 2 != 0) {
+            #
+            #     additionalDE <- sample(sampleNonDE, size = 1)
+            #
+            #     sampleDE <- union(sampleDE, additionalDE)
+            #     sampleNonDE <- setdiff(sampleNonDE, additionalDE)
+            #
+            #     # Correct the profile table and the sameCond vector (last position)
+            #
+            #     profilesDE <- rbind(profilesDE, c(additionalDE, TRUE, rep('flat', .Object@numberGroups), rep(NA, .Object@numberGroups)))
+            #     sameCond <- c(sameCond, TRUE)
+            # }
         }
 
         # Randomly assign a profile to every NonDE
@@ -209,16 +245,7 @@ setMethod("initialize", signature="MOSimulation", function(.Object, ...) {
             else
                 stop("There are no non-DEG profiles available, please reduce the amount of DE genes.")
 
-        # Set correct colnames
-        # Important: pattern "Group[n]" is used to subset with dplyr later
-        colNames <- paste0("Group", seq_len(.Object@numberGroups))
-
-        # Symbols needed to split the DF by dplyr
-        dplyrGroup <- lapply(colNames, as.symbol)
-
-        colnames(profilesDE) <- colnames(profilesNonDE) <- c("ID", "DE",
-                                         colNames, utils::tail(colnames(profilesDE),
-                                                     .Object@numberGroups))
+        colnames(profilesNonDE) <- colnames(profilesDE)
 
         # Merge DE + nonDE for easier access
         # profilesExpr <- rbind(profilesDE, profilesNonDE)
@@ -617,22 +644,17 @@ setMethod("initialize", signature="MOSimulation", function(.Object, ...) {
         # samples on DE genes. The associated regulators must change as well,
         # depending on the linked effect.
         if (.Object@numberGroups > 1) {
-            # Determine the rows with the same condition on all columns
-            # Change only base count values when the profiles are flat on all conditions,
-            # otherwise they are already DE genes.
-            # sameCond <- apply(apply(dplyr::select(profilesDE, dplyr::starts_with("Group")), 2, '==', 'flat'), 1, all)
-            sameCond <- dplyr::select(profilesDE, dplyr::starts_with("Group")) %>%
-                purrr::map(`==`, 'flat') %>%
-                purrr::pmap_lgl(all)
 
             # NULL by default
             FlatRNAseq <- NULL
 
+            # Variable "sameCond" defined just after profilesDE when numberGroups > 1
             if ((nSameCount <- sum(sameCond))) {
                 message(sprintf("Creating settings to change count values on %d DE genes with the same flat profile on all groups.", nSameCount))
 
-                # Select ID, Group1-GroupN (remove DE -2nd- column)
-                sameCondDE <- t(apply(profilesDE[sameCond, -c(2), drop = FALSE], 1, function(geneRow) {
+                profilesSameCond <- dplyr::select(profilesDE[sameCond, ], c("ID"), dplyr::starts_with("Group"))
+
+                sameCondDE <- t(apply(profilesSameCond, 1, function(geneRow) {
                     # TODO: consider DE as one gene that changes in one condition compared to any of the others,
                     # or just consider the fist group as a reference?
                     #
@@ -648,12 +670,36 @@ setMethod("initialize", signature="MOSimulation", function(.Object, ...) {
                     # regulator effects and are used only as indicators.
                     #
                     # Note: add 1 to the indexes because the first column is the gene ID
-                    geneRow[as.numeric(colChange) + 1] <- sample(c('enhancer', 'repressor'), size = 1)
+                    geneRow[as.numeric(colChange) + 1] <- "change" #sample(c('enhancer', 'repressor'), size = 1)
 
                     return(geneRow)
                 }))
 
+
+                for (groupChange in seq_len(.Object@numberGroups - 1) + 1) {
+                    # Columns: ID, Group1, Group2...
+                    indexGenes <- (sameCondDE[, groupChange + 1] == "change")
+
+                    # Assign an "up/down" tag exactly at 50%
+                    # TODO: assign the down tag to genes with the higher counts
+                    sameCondDE[indexGenes, groupChange + 1] <- head(sample(rep(c("up", "down"), sum(indexGenes)/2 + 1)), n = sum(indexGenes))
+                }
+
                 FlatRNAseq <- data.frame(sameCondDE, stringsAsFactors = FALSE)
+                colnames(FlatRNAseq) <- c("ID", paste0("Group", seq_len(.Object@numberGroups)))
+            }
+
+            flatClassifyDups <- function(groupDF) {
+                groupedDF <- groupDF %>% dplyr::group_by_at(dplyr::vars(dplyr::starts_with("Group")))
+                groupSizes <- dplyr::group_size(groupedDF)
+
+                # Select majoritary group
+                groupSelected <- sample(as.character(which(groupSizes == max(groupSizes))), size = 1)
+
+                # Remove all other interactions
+                outputDF <- dplyr::slice(groupDF, which(dplyr::group_indices(groupedDF) == groupSelected))
+
+                return(outputDF)
             }
 
             # Generate "FlatGroup" list for each regulator
@@ -662,11 +708,30 @@ setMethod("initialize", signature="MOSimulation", function(.Object, ...) {
                 if (is.null(FlatRNAseq))
                     return(NULL)
 
+                oppositeEffects <- list(
+                    "up" = "down",
+                    "down" = "up",
+                    "flat" = "flat"
+                )
+
                 profileSubsetID <- dplyr::rename(FlatRNAseq, Gene = .data$ID) %>%
                     dplyr::inner_join(profilesReg[[class(regulator)]][, c('ID', 'Effect', 'Gene')], by = c("Gene" = "Gene")) %>%
-                    dplyr::filter(! is.na(.data$Effect)) %>% dplyr::select(.data$ID)
+                    dplyr::filter(! is.na(.data$Effect))
 
-                return(profileSubsetID)
+                multipleRegs <- (duplicated(profileSubsetID$ID) | duplicated(profileSubsetID$ID, fromLast=TRUE))
+
+                if (any(multipleRegs)) {
+                    correctedDuplicates <- profileSubsetID[multipleRegs,,drop=FALSE] %>% dplyr::group_by(ID) %>% dplyr::do(flatClassifyDups(.))
+                    finalDF <- dplyr::bind_rows(profileSubsetID[!multipleRegs,,drop=FALSE], correctedDuplicates)
+                } else {
+                    finalDF <- profileSubsetID
+                }
+
+                finalDF <- finalDF  %>%
+                    dplyr::mutate_at(dplyr::vars(dplyr::starts_with("Group")), ~ifelse(Effect == "enhancer", ., oppositeEffects[.])) %>%
+                    dplyr::mutate_at(dplyr::vars(dplyr::starts_with("Group")), list(Effect = ~ifelse(. != "flat", Effect, NA)))
+
+                return(finalDF)
             })
 
             profilesReg$FlatGroups$SimRNAseq <- FlatRNAseq
