@@ -5,7 +5,7 @@
 #' @importFrom stats setNames
 NULL
 
-# Avoid harmless note with R CMD check
+# Avoid harmless note with R CMD check and umberto is a boss
 if(getRversion() >= "2.15.1")  utils::globalVariables(c(".", "n", "sampleData"))
 
 #' MOSim
