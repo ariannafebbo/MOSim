@@ -2,7 +2,13 @@
 #' @param data A user input matrix with genes (peaks in case of scATAC-seq) as rows and cells as columns. Alternatively MOSim allows user to estimate the input parameters from an existing count table by typing 'example_matrix'
 #' @return a named list with omic type as name and the count matrix as value
 
-length(rna_orig_counts)
+#Required packages
+suppressPackageStartupMessages({
+  library(SPARSim)
+  library(dplyr)
+  library(Seurat)
+  library(Signac)
+  })
 
 sc_omicData <- function(omic, data = NULL){
   
@@ -14,19 +20,11 @@ sc_omicData <- function(omic, data = NULL){
   
   
   if (is.null(data)){ 
-      Seurat_obj <- readRDS("pbmc_idents_SeuratObject.rds")
-      
-      #Selecting pDC and Bmemory cell from the larger dataset
-      Seurat_Bmemory<- subset(x = Seurat_obj, idents = c("B memory"))
-      Seurat_pDC <- subset(x = Seurat_obj, idents = c("pDC"))
-      example_matrix <- merge(x= Seurat_Bmemory, y= Seurat_pDC)
     
       if (omic == "scRNA-seq"){ 
       
         ##scRNA##
-        rna_obj <- example_matrix@assays[["RNA"]]
-        dgCmatrix_counts <- rna_obj@counts
-        rna_orig_counts <- as.matrix(dgCmatrix_counts)
+        rna_orig_counts <- readRDS("/home/arifebbo/Desktop/MOSim/data/rna_orig_counts.rds")
       
         omic_list <- list("scRNA-seq" = rna_orig_counts)
         return(omic_list)
@@ -34,11 +32,9 @@ sc_omicData <- function(omic, data = NULL){
       } else if (omic =="scATAC-seq"){
       
         ##scATAC##
-        atac_obj <- example_matrix@assays[["ATAC"]]
-        dgCmatrix_counts <- atac_obj@counts
-        atac_orig_counts <- as.matrix(dgCmatrix_counts)
+        atac_orig_counts <- readRDS("/home/arifebbo/Desktop/MOSim/data/atac_orig_counts.rds")
       
-         omic_list <- list("scATAC-seq" = atac_orig_counts)
+        omic_list <- list("scATAC-seq" = atac_orig_counts)
         return(omic_list)
       
       }
@@ -52,25 +48,15 @@ sc_omicData <- function(omic, data = NULL){
   } else if (is.matrix(data)){
     print(omic)
     omic_list <- list()
-    omic_list[[omic]] <- data  #rotto qui
+    omic_list[[omic]] <- data 
     return(omic_list)
   }
 }
 
-prova1 <- sc_omicData("scR-seq", rna_orig_counts)
-prova2 <- sc_omicData("scATAC-seq")
-prova3 <- sc_omicData("scATAC-seq", c)
-ca <- 2
-pa <- 4
-!is.matrix(c)
-rna_orig_counts <- as.matrix(dgCmatrix_counts)
-
-omic <- "scRNA-seq"
-provona <- tibble::lst(omic, rna_orig_counts)
 
 
-#@param omics character vector containing the names of the omics to simulate,
-#       which can be "scRNA-seq" or "scATAC-seq
+
+#' @param omics named list containing the omic to simulate as names, which can be "scRNA-seq" or "scATAC-seq, and the input count matrix as 
 
 
 
