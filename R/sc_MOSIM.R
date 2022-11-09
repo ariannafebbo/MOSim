@@ -24,7 +24,7 @@ sc_omicData <- function(omic, data = NULL){
       if (omic == "scRNA-seq"){ 
       
         ##scRNA##
-        rna_orig_counts <- readRDS("/home/arifebbo/Desktop/MOSim/data/rna_orig_counts.rds")
+        rna_orig_counts <- readRDS("../data/rna_orig_counts.rds")
       
         omic_list <- list("scRNA-seq" = rna_orig_counts)
         return(omic_list)
@@ -32,7 +32,7 @@ sc_omicData <- function(omic, data = NULL){
       } else if (omic =="scATAC-seq"){
       
         ##scATAC##
-        atac_orig_counts <- readRDS("/home/arifebbo/Desktop/MOSim/data/atac_orig_counts.rds")
+        atac_orig_counts <- readRDS("../data/atac_orig_counts.rds")
       
         omic_list <- list("scATAC-seq" = atac_orig_counts)
         return(omic_list)
@@ -53,38 +53,34 @@ sc_omicData <- function(omic, data = NULL){
   }
 }
 
-
-omic_list <- list("scRNA-seq" = rna_orig_counts,
-                  "scATAC-seq" = atac_orig_counts)
-omic_list[["scRNA-seq"]]
-#ritorna la matrice scRNA
-prova <- lapply(omic_list, returnValue)
-
-length(omic_list)
-
+scRNA <- sc_omicData("scRNA-seq")
+scATAC <- sc_omicData("scATAC-seq")
+omic_list <- c(scRNA, scATAC)
 
 
 
 #' @param omics named list containing the omic to simulate as names, which can be "scRNA-seq" or "scATAC-seq, and the input count matrix as 
 #' @param cellTypes list where the i-th element of the list contains the column indices for i-th experimental conditions. List must be a named list.
 
-param_estimation <- function(omic, numberCells){
-  omic_norm <- scran_normalization(omic)
-  param_est <- SPARSim_estimate_parameter_from_data(raw_data = omic, 
-                                                    norm_data = omic_norm, 
-                                                    conditions = numberCells)
-  return(param_est)
+param_estimation <- function(omic, cellTypes){
+  N_omic <- length(omic)
+  
+  lapply(omic, scran_normalization)
+  #for(i in 1:N_omic){
+    #param_est <- SPARSim_estimate_parameter_from_data(raw_data = omic[i], 
+    #                                                norm_data = omic_norm, 
+    #                                                conditions = cellTypes)
+    #return(param_est)
+    #}
 }
 
-condA_column_index <- c(1:160) # Condition A column indices: from column 1 to column 160
-condB_column_index <- c(161:270) # Condition B column indices: from column 161 to column 270
+prova <- param_estimation(omic_list, conditions)
 
-# Create conditions param ATAC
-counts_conditions <- list(condA = condA_column_index, 
-                          condB = condB_column_index
-example <- param_estimation(rna_orig_counts, counts_conditions)
-typeof(example)
-length(example)
+omic_list[1]
+prova <- param_estimation()
+
+conditions <- list(cellA = c(1:160), cellB = c(161:270))
+
 
 
 sc_MOSim <- function(omics, cellTypes, numberCells = NULL, mean = NULL, sd = NULL, sim_parameter = NULL ){
