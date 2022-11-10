@@ -1,3 +1,5 @@
+library(testthat)
+
 test_that("Passing a wrong string in 'omics' returns NA", {
   expect_message(sc_omicData("scR-seq", rna_orig_counts), NA)
 })
@@ -25,3 +27,10 @@ test_that("Passing 'scATAC-seq' as omic returns list", {
 
 
 
+test_that("param_estimation returns a list", {
+  scRNA <- sc_omicData("scRNA-seq")
+  scATAC <- sc_omicData("scATAC-seq")
+  omic_list <- c(scRNA, scATAC)
+  conditions <- list(cellA = c(1:160), cellB = c(161:270))
+  expect_type(param_estimation(omic_list, conditions),"list")
+})
