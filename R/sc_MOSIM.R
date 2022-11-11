@@ -61,7 +61,7 @@ sc_omicData <- function(omic, data = NULL){
 #' @param omics named list containing the omic to simulate as names, which can be "scRNA-seq" or "scATAC-seq, and the input count matrix as 
 #' @param cellTypes list where the i-th element of the list contains the column indices for i-th experimental conditions. List must be a named list.
 #' @return a named list with simulation parameters for each omic as values
-#' 
+
 param_estimation <- function(omic, cellTypes){
   
   N_omic <- length(omic)
@@ -73,7 +73,7 @@ param_estimation <- function(omic, cellTypes){
     param_est <- SPARSim_estimate_parameter_from_data(raw_data = omic[[i]],
                                                     norm_data = norm_list[[i]],
                                                     conditions = cellTypes)
-    param_est_list[[paste0("param_est_",names(omic)[i])]] <- param_est
+    param_est_list[[paste0("param_est_", names(omic)[i])]] <- param_est
     
   }
   
@@ -83,10 +83,16 @@ param_estimation <- function(omic, cellTypes){
 
 
 
+#' @param omics named list containing the omic to simulate as names, which can be "scRNA-seq" or "scATAC-seq, and the input count matrix as 
+#' @param cellTypes list where the i-th element of the list contains the column indices for i-th experimental conditions. List must be a named list.
+#' @param numberCells vector of numbers. The numbers correspond to the number of cells the user wants to simulate per each cell type. The length of the vector must be the same as length of \code{cellTypes}.
+#' @param mean vector of numbers of mean per each cell type. Must be specified just if \code{numberCells} is specified.
+#' @param sd vector of numbers of standard deviation per each cell type. Must be specified just if \code{numberCells} is specified.
+#' @param output_sim_parameter boolean flag. If TRUE, the function will output a list of simulation parameter per each cell type. (Default: FALSE)
+#' @return Or a list of count matrices. 1 per each omic. Or a list of Seurat obj. ?  
 
 
-
-sc_MOSim <- function(omics, cellTypes, numberCells = NULL, mean = NULL, sd = NULL, sim_parameter = NULL ){
+sc_MOSim <- function(omics, cellTypes, numberCells = NULL, mean = NULL, sd = NULL, output_sim_parameter = FALSE ){
   
   lapply(omics, param_estimation)
 
