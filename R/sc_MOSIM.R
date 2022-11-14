@@ -1,7 +1,3 @@
-#' @param omic A string which can be either "scRNA-seq" or "scATAC-seq"
-#' @param data A user input matrix with genes (peaks in case of scATAC-seq) as rows and cells as columns. Alternatively MOSim allows user to estimate the input parameters from an existing count table by typing 'example_matrix'
-#' @return a named list with omic type as name and the count matrix as value
-
 #Required packages
 suppressPackageStartupMessages({
   library(SPARSim)
@@ -10,30 +6,35 @@ suppressPackageStartupMessages({
   library(Signac)
   })
 
-sc_omicData <- function(omic, data = NULL){
+#' @param omic A string which can be either "scRNA-seq" or "scATAC-seq"
+#' @param data A user input matrix with genes (peaks in case of scATAC-seq) as rows and cells as columns. Alternatively MOSim allows user to estimate the input parameters from an existing count table by typing 'example_matrix'
+#' @return a named list with omics type as name and the count matrix as value
+
+
+sc_omicData <- function(omics, data = NULL){
   
-  if (omic != "scRNA-seq" && omic != "scATAC-seq"){
+  if (omics != "scRNA-seq" && omics != "scATAC-seq"){
     
-    print("omic must be a either 'scRNA-seq' or 'scATAC-seq'")
+    print("omics must be a either 'scRNA-seq' or 'scATAC-seq'")
     return(NA)
     
   }
   
   if (is.null(data)){ 
     
-      if (omic == "scRNA-seq"){ 
+      if (omics == "scRNA-seq"){ 
       
         ##scRNA##
         rna_orig_counts <- readRDS("../data/rna_orig_counts.rds")
-        omic_list <- list("scRNA-seq" = rna_orig_counts)
-        return(omic_list)
+        omics_list <- list("scRNA-seq" = rna_orig_counts)
+        return(omics_list)
       
-      } else if (omic =="scATAC-seq"){
+      } else if (omics =="scATAC-seq"){
       
         ##scATAC##
         atac_orig_counts <- readRDS("../data/atac_orig_counts.rds")
-        omic_list <- list("scATAC-seq" = atac_orig_counts)
-        return(omic_list)
+        omics_list <- list("scATAC-seq" = atac_orig_counts)
+        return(omics_list)
       
       }
   } 
@@ -45,10 +46,10 @@ sc_omicData <- function(omic, data = NULL){
     
   } else if (is.matrix(data)){
     
-    print(omic)
-    omic_list <- list()
-    omic_list[[omic]] <- data 
-    return(omic_list)
+    print(omics)
+    omics_list <- list()
+    omics_list[[omics]] <- data 
+    return(omics_list)
     
   }
 }
@@ -58,22 +59,22 @@ sc_omicData <- function(omic, data = NULL){
 
 
 
-#' @param omics named list containing the omic to simulate as names, which can be "scRNA-seq" or "scATAC-seq, and the input count matrix as 
+#' @param omics named list containing the omics to simulate as names, which can be "scRNA-seq" or "scATAC-seq, and the input count matrix as 
 #' @param cellTypes list where the i-th element of the list contains the column indices for i-th experimental conditions. List must be a named list.
-#' @return a named list with simulation parameters for each omic as values
+#' @return a named list with simulation parameters for each omics as values
 
-param_estimation <- function(omic, cellTypes){
+param_estimation <- function(omics, cellTypes){
   
-  N_omic <- length(omic)
-  norm_list <- lapply(omic, scran_normalization)
+  N_omics <- length(omics)
+  norm_list <- lapply(omics, scran_normalization)
   param_est_list <- list()
   
-  for(i in 1:N_omic){
+  for(i in 1:N_omics){
 
-    param_est <- SPARSim_estimate_parameter_from_data(raw_data = omic[[i]],
+    param_est <- SPARSim_estimate_parameter_from_data(raw_data = omics[[i]],
                                                     norm_data = norm_list[[i]],
                                                     conditions = cellTypes)
-    param_est_list[[paste0("param_est_", names(omic)[i])]] <- param_est
+    param_est_list[[paste0("param_est_", names(omics)[i])]] <- param_est
     
   }
   
@@ -92,14 +93,34 @@ param_estimation <- function(omic, cellTypes){
 #' @return Or a list of count matrices. 1 per each omic. Or a list of Seurat obj. ?  
 
 
+
+
 sc_MOSim <- function(omics, cellTypes, numberCells = NULL, mean = NULL, sd = NULL, output_sim_parameter = FALSE ){
   
-  lapply(omics, param_estimation)
-
-  sim_parameter_matrix <- NULL
-  if(!is.null(sim_parameter)){
-    cat("Generating simulation parameters matrices...", "\n")
+  N_param <- length(param_list)
+  sim_list <- list()
+  
+  if(missing(numberCells) && missing(mean) && missing(sd)){
     
-    return(SPARSim_sim_param)
+    param_list <- param_estimation(omics, cellTypes)
+    
+    for(i in 1:N_param){
+      
+      sim <- SPARSim_simulation(dataset_parameter = param_[[i]])
+      sim_list[[paste0("sim_", names(omics)[i])]]
+      
+    }
+    
   }
+  # lapply(omics, param_estimation)
+  # 
+  # sim_parameter_matrix <- NULL
+  # if(!is.null(sim_parameter)){
+  #   cat("Generating simulation parameters matrices...", "\n")
+  #   
+  #   return(SPARSim_sim_param)
+  # }
 }
+
+
+prova <- sc_MOSim(omic_list, conditions)
