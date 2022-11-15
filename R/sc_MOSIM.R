@@ -4,6 +4,7 @@ suppressPackageStartupMessages({
   library(dplyr)
   library(Seurat)
   library(Signac)
+  library(stringr)
   })
 
 #' @param omic A string which can be either "scRNA-seq" or "scATAC-seq"
@@ -84,6 +85,7 @@ param_estimation <- function(omics, cellTypes){
 
 
 
+
 #' @param omics named list containing the omic to simulate as names, which can be "scRNA-seq" or "scATAC-seq, and the input count matrix as 
 #' @param cellTypes list where the i-th element of the list contains the column indices for i-th experimental conditions. List must be a named list.
 #' @param numberCells vector of numbers. The numbers correspond to the number of cells the user wants to simulate per each cell type. The length of the vector must be the same as length of \code{cellTypes}.
@@ -96,20 +98,28 @@ param_estimation <- function(omics, cellTypes){
 
 
 sc_MOSim <- function(omics, cellTypes, numberCells = NULL, mean = NULL, sd = NULL, output_sim_parameter = FALSE ){
-  
-  N_param <- length(param_list)
-  sim_list <- list()
+
   
   if(missing(numberCells) && missing(mean) && missing(sd)){
     
     param_list <- param_estimation(omics, cellTypes)
     
+    N_param <- length(param_list)
+    sim_list <- list()
+    
     for(i in 1:N_param){
       
-      sim <- SPARSim_simulation(dataset_parameter = param_[[i]])
-      sim_list[[paste0("sim_", names(omics)[i])]]
+      sim <- SPARSim_simulation(dataset_parameter = param_list[[i]])
+      sim <- sim[["count_matrix"]]
+      sim_list[[paste0("sim_", names(omics)[i])]] <- sim
       
     }
+    
+    seu_obj <- list()
+    N_sim <- length(sim_list)
+    
+    for(i in 1:N_sim)
+    seu_obj <- CreateSeuratObject(counts = sim_list[[i]], assay = )
     
   }
   # lapply(omics, param_estimation)
@@ -122,5 +132,12 @@ sc_MOSim <- function(omics, cellTypes, numberCells = NULL, mean = NULL, sd = NUL
   # }
 }
 
+param <- param_estimation(omic_list, conditions)
+sim <- SPARSim_simulation(param[[1]])
+sim[[1]]
 
-prova <- sc_MOSim(omic_list, conditions)
+param[[1]]
+
+names(prova)[1]
+sub('sim_sc','',names(prova)[1])
+
