@@ -117,9 +117,17 @@ sc_MOSim <- function(omics, cellTypes, numberCells = NULL, mean = NULL, sd = NUL
     
     seu_obj <- list()
     N_sim <- length(sim_list)
+
+    for(i in 1:N_sim){
+      
+    assay_name <- str_split(names(sim_list)[i], "-")[[1]][1]
+    assay_name <- sub("sim_sc","",assay_name)
+    seu <- CreateSeuratObject(counts = sim_list[[i]], assay = assay_name)
+    seu_obj[[names(omics)[i]]] <- seu
     
-    for(i in 1:N_sim)
-    seu_obj <- CreateSeuratObject(counts = sim_list[[i]], assay = )
+    }
+    
+    return(seu_obj)
     
   }
   # lapply(omics, param_estimation)
@@ -132,12 +140,8 @@ sc_MOSim <- function(omics, cellTypes, numberCells = NULL, mean = NULL, sd = NUL
   # }
 }
 
-param <- param_estimation(omic_list, conditions)
-sim <- SPARSim_simulation(param[[1]])
-sim[[1]]
-
-param[[1]]
-
-names(prova)[1]
-sub('sim_sc','',names(prova)[1])
+scRNA <- sc_omicData("scRNA-seq")
+scTATC <- sc_omicData("scATAC-seq")
+omic_list <- c(scRNA, scTATC)
+conditions <- list(cellA = c(1:160), cellB = c(161:270))
 
