@@ -58,13 +58,19 @@ sc_omicData <- function(omics, data = NULL){
 
 
 
+cond_A_param <- SPARSim_create_simulation_parameter(intensity = prova[["param_est_scRNA-seq"]][[1]][["intensity"]],
+                                                    variability = prova[["param_est_scRNA-seq"]][[1]][["variability"]],
+                                                    library_size = round(rnorm(n = 100, mean = 2*10^6, sd = 10^3)),
+                                                    condition_name = prova[["param_est_scRNA-seq"]][[1]][["name"]],
+                                                    feature_names = names(prova[["param_est_scRNA-seq"]][[1]][["intensity"]]))
+
 
 
 #' @param omics named list containing the omics to simulate as names, which can be "scRNA-seq" or "scATAC-seq, and the input count matrix as 
 #' @param cellTypes list where the i-th element of the list contains the column indices for i-th experimental conditions. List must be a named list.
 #' @return a named list with simulation parameters for each omics as values
 
-param_estimation <- function(omics, cellTypes){
+param_estimation <- function(omics, cellTypes, numberCells = NULL, mean = NULL, sd = NULL){
   
   N_omics <- length(omics)
   norm_list <- lapply(omics, scran_normalization)
@@ -79,7 +85,16 @@ param_estimation <- function(omics, cellTypes){
     
   }
   
-  return(param_est_list)
+  if(missing(numberCells) && missing(mean) && missing(sd)){
+    
+    return(param_est_list)
+    
+  } else if (!missing(numberCells) && !missing(mean) && !missing(sd)){
+    N_cellTypes <- length(cellTypes)
+    param_est_list_mod <- list()
+    
+    cond_param <- SPARSim_create_simulation_parameter()
+  }
   
 }
 
@@ -91,13 +106,12 @@ param_estimation <- function(omics, cellTypes){
 #' @param numberCells vector of numbers. The numbers correspond to the number of cells the user wants to simulate per each cell type. The length of the vector must be the same as length of \code{cellTypes}.
 #' @param mean vector of numbers of mean per each cell type. Must be specified just if \code{numberCells} is specified.
 #' @param sd vector of numbers of standard deviation per each cell type. Must be specified just if \code{numberCells} is specified.
-#' @param output_sim_parameter boolean flag. If TRUE, the function will output a list of simulation parameter per each cell type. (Default: FALSE)
-#' @return Or a list of count matrices. 1 per each omic. Or a list of Seurat obj. ?  
+#' @return a list of Seurat object, one per each omic. 
 
 
 
 
-sc_MOSim <- function(omics, cellTypes, numberCells = NULL, mean = NULL, sd = NULL, output_sim_parameter = FALSE ){
+sc_MOSim <- function(omics, cellTypes, numberCells = NULL, mean = NULL, sd = NULL){
 
   
   if(missing(numberCells) && missing(mean) && missing(sd)){
@@ -130,14 +144,6 @@ sc_MOSim <- function(omics, cellTypes, numberCells = NULL, mean = NULL, sd = NUL
     return(seu_obj)
     
   }
-  # lapply(omics, param_estimation)
-  # 
-  # sim_parameter_matrix <- NULL
-  # if(!is.null(sim_parameter)){
-  #   cat("Generating simulation parameters matrices...", "\n")
-  #   
-  #   return(SPARSim_sim_param)
-  # }
 }
 
 scRNA <- sc_omicData("scRNA-seq")
@@ -145,3 +151,11 @@ scTATC <- sc_omicData("scATAC-seq")
 omic_list <- c(scRNA, scTATC)
 conditions <- list(cellA = c(1:160), cellB = c(161:270))
 
+
+cond_A_param <- SPARSim_create_simulation_parameter(intensity = prova[["param_est_scRNA-seq"]][[1]][["intensity"]],
+                                                    variability = prova[["param_est_scRNA-seq"]][[1]][["variability"]],
+                                                    library_size = round(rnorm(n = 100, mean = 2*10^6, sd = 10^3)),
+                                                    condition_name = prova[["param_est_scRNA-seq"]][[1]][["name"]],
+                                                    feature_names = names(prova[["param_est_scRNA-seq"]][[1]][["intensity"]]))
+
+all.equal(cond_A_param[["variability"]],prova[["param_est_scRNA-seq"]][[1]][["variability"]])
