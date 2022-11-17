@@ -90,14 +90,24 @@ param_estimation <- function(omics, cellTypes, numberCells = NULL, mean = NULL, 
     return(param_est_list)
     
   } else if (!missing(numberCells) && !missing(mean) && !missing(sd)){
-    N_cellTypes <- length(cellTypes)
-    param_est_list_mod <- list()
     
-    cond_param <- SPARSim_create_simulation_parameter()
+      N_cellTypes <- length(cellTypes)
+      param_est_list_mod <- list()
+    
+      for(i in 1:N_cellTypes){
+        
+        cond_param <- SPARSim_create_simulation_parameter(intensity = param_est_list[[i]][[i]][["intensity"]],
+                                                          variability = param_est_list[[i][[i]][["variability"]],
+                                                          library_size = round(rnorm(n = numberCells[i], mean = mean[i], sd = sd[i])),
+                                                          condition_name = param_est_list[[i][[i]][["name"]],
+                                                          feature_names = names(param_est_list[[i][[i]][["intensity"]]))
+        param_est_list_mod[[paste0("param_est_", names(omics)[i])]] <- cond_est 
+      }
+      
+      return(param_est_list_mod)
   }
   
 }
-
 
 
 
