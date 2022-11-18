@@ -109,6 +109,11 @@ param_estimation <- function(omics, cellTypes, numberCells = NULL, mean = NULL, 
       }
       
       return(param_est_list_mod)
+  } else {
+    
+    print("the user must either not provide the optional arguments or provide them all")
+    return(NA)
+    
   }
   
 }
