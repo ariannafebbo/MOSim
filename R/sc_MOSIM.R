@@ -11,7 +11,7 @@ suppressPackageStartupMessages({
 #' @param data A user input matrix with genes (peaks in case of scATAC-seq) as rows and cells as columns. Alternatively MOSim allows user to estimate the input parameters from an existing count table by typing 'example_matrix'
 #' @return a named list with omics type as name and the count matrix as value
 
-class(scRNA)
+
 sc_omicData <- function(omics, data = NULL){
   
   if (omics != "scRNA-seq" && omics != "scATAC-seq"){
@@ -76,6 +76,16 @@ sc_omicData <- function(omics, data = NULL){
 
 param_estimation <- function(omics, cellTypes, numberCells = NULL, mean = NULL, sd = NULL){
   
+  all_missing <- missing(numberCells) && missing(mean) && missing(sd)
+  all_specified <- !missing(numberCells) && !missing(mean) && !missing(sd)
+  
+  if( !(all_missing || all_specified )){
+  
+    print("the user must either not provide the optional arguments or provide them all")
+    return(NA)
+    
+  }
+  
   N_omics <- length(omics)
   norm_list <- lapply(omics, scran_normalization)
   param_est_list <- list()
@@ -89,36 +99,45 @@ param_estimation <- function(omics, cellTypes, numberCells = NULL, mean = NULL, 
     
   }
   
-  if(missing(numberCells) && missing(mean) && missing(sd)){
+  if(all_missing){
     
     return(param_est_list)
     
-  } else if (!missing(numberCells) && !missing(mean) && !missing(sd)){
+  } else if (all_specified){
     
+      N_param_est_list<- length(param_est_list)
       N_cellTypes <- length(cellTypes)
       param_est_list_mod <- list()
     
-      for(i in 1:N_cellTypes){
+      for(i in 1:N_param_est_list){
+        cell_type_list <- list()
         
-        cond_param <- SPARSim_create_simulation_parameter(intensity = param_est_list[[i]][[i]][["intensity"]],
-                                                          variability = param_est_list[[i]][[i]][["variability"]],
-                                                          library_size = round(rnorm(n = numberCells[i], mean = mean[i], sd = sd[i])),
-                                                          condition_name = param_est_list[[i]][[i]][["name"]],
-                                                          feature_names = names(param_est_list[[i]][[i]][["intensity"]]))
-        param_est_list_mod[[paste0("param_est_", names(omics)[i])]] <- cond_param 
+        for(j in 1:N_cellTypes){
+        
+        cond_param <- SPARSim_create_simulation_parameter(intensity = param_est_list[[i]][[j]][["intensity"]],
+                                                          variability = param_est_list[[i]][[j]][["variability"]],
+                                                          library_size = round(rnorm(n = numberCells[j], mean = mean[j], sd = sd[j])),
+                                                          condition_name = param_est_list[[i]][[j]][["name"]],
+                                                          feature_names = names(param_est_list[[i]][[j]][["intensity"]]))
+        cell_type_list[[names(cellTypes)[j]]] <- cond_param 
+        
+        }
+        param_est_list_mod[[paste0("param_est_", names(omics)[i])]] <- cell_type_list 
       }
       
       return(param_est_list_mod)
-  } else {
-    
-    print("the user must either not provide the optional arguments or provide them all")
-    return(NA)
-    
-  }
+  } 
   
 }
 
 
+scRNA <- sc_omicData("scRNA-seq")
+scTATC <- sc_omicData("scATAC-seq")
+omic_list <- c(scRNA, scTATC)
+cell_types <- list(cellA = c(1:30), cellB = c(161:191))
+
+prova_param_est_3 <- param_estimation(omic_list, cell_types, numberCells = c(10,20), mean = c(2*10^6, 2*10^3), sd = c(10^3, 10^2))
+prova_param_est_4 <- param_estimation(omic_list, cell_types)
 
 
 
@@ -166,13 +185,12 @@ sc_MOSim <- function(omics, cellTypes, numberCells = NULL, mean = NULL, sd = NUL
 scRNA <- sc_omicData("scRNA-seq")
 scTATC <- sc_omicData("scATAC-seq")
 omic_list <- c(scRNA, scTATC)
-conditions <- list(cellA = c(1:160), cellB = c(161:270))
+cell_types <- list(cellA = c(1:160), cellB = c(161:270))
 
 
-cond_A_param <- SPARSim_create_simulation_parameter(intensity = prova[["param_est_scRNA-seq"]][[1]][["intensity"]],
-                                                    variability = prova[["param_est_scRNA-seq"]][[1]][["variability"]],
-                                                    library_size = round(rnorm(n = 100, mean = 2*10^6, sd = 10^3)),
-                                                    condition_name = prova[["param_est_scRNA-seq"]][[1]][["name"]],
-                                                    feature_names = names(prova[["param_est_scRNA-seq"]][[1]][["intensity"]]))
+prova_param_est <- param_estimation(omic_list, cell_types, numberCells = c(1,2))
+prova_param_est_2 <- param_estimation(omic_list, cell_types, numberCells = c(1,2), mean= c(2,3))
+prova_param_est_3 <- param_estimation(omic_list, cell_types, numberCells = c(10,20), mean = c(2*10^6, 2*10^3), sd = c(10^3, 10^2))
 
-all.equal(cond_A_param[["variability"]],prova[["param_est_scRNA-seq"]][[1]][["variability"]])
+
+proma_sc_MOSim <- sc_MOSim(omic_list, cell_types, numberCells = c(10,20), mean = c(2*10^6, 2*10^3), sd = c(10^3, 10^2))
