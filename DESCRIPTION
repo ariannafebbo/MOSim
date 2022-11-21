@@ -8,9 +8,15 @@ Depends:
     R (>= 3.6)
 License: GPL-3
 LazyData: false
-biocViews: Software, TimeCourse, ExperimentalDesign, RNASeq
+biocViews: Software, TimeCourse, ExperimentalDesign, RNASeq, scRNASeq, scATACSeq, multiomics
 BugReports: https://github.com/Neurergus/MOSim/issues
-URL: https://github.com/Neurergus/MOSim
+URL: https://github.com/ConesaLab/MOSim
+Depends:
+    SPARSim,
+    dplyr,
+    Seurat,
+    Signac,
+    stringr
 Imports:
     HiddenMarkov,
     zoo,
