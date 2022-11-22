@@ -12,9 +12,11 @@ output:
       
 ---
 
-```{r setup, include=FALSE}
+```{r setup, echo=FALSE}
 library(knitr)
 library(rmdformats)
+library(MOSim)
+source("/home/arifebbo/Desktop/MOSim/R/sc_MOSIM.R")
 ## Global options
 options(max.print="75")
 opts_chunk$set(echo=TRUE,
@@ -30,22 +32,32 @@ options(max.print=10000)
 
 # Introduction
 
-This vignette containes a step by step guide on how to use sc_MOSim, a single-cell multi-omic simulator. It lets the user simulate scRNA-seq and scATAC-seq count matrices starting from either: 
+sc_MOSim is an R package for the multi-omic simulation of single-cell RNA-seq and single-cell ATAC-seq data. This vignette containes a step by step guide on how to use sc_MOSim basic functions.
+It lets the user simulate scRNA-seq and scATAC-seq count matrices starting from either: 
 
 * real count matrix uploaded in the package,
 * real count matrix provided by the user.
 
 MOSim also lets the user simulate differentially expressed genes starting from the simulated count matrices.
 
-## How to input data
+## Data preparation
 
-The function \Rfunction{sc_omicData} was designed to help the user to provide its own data and set it in a compatible format with the function \Rfunction{sc_MOSim}, as follows:
+The function `sc_omicData` was designed to help the user to provide its own data and set it in a compatible format with the function `sc_MOSim`, as follows:
 
-\Robject{sc_omicData(omics, data}
+`sc_omicData(omics, data = NULL)`
 
+### Real count matrix uploaded in the package
 
-```{r cars}
-summary(cars)
+sc_MOSim allows the user to simulate scRNA and scATAC count data resembling the characteristics of PBMC dataset available from 10X Genomics. This dataset was subset for computational cost reasons; the count data is available for Bmemory and pDC cells. 
+
+As example, we suppose we want to prepare both scRNA-seq and scATAC-seq data. 
+
+```{r count matrix uploaded in the package}
+
+scRNAseq <- sc_omicData("scRNA-seq")
+
+scATACseq <- sc_omicData("scATAC-seq")
+
 ```
 
 ## Including Plots
