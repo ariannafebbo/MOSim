@@ -1,10 +1,11 @@
 library(testthat)
 
+# sc_omicData function
 test_that("Passing a wrong string in 'omics' returns NA", {
   expect_message(sc_omicData("scR-seq", rna_orig_counts), NA)
 })
 
-test_that("Passing an object which is not a matrix in datain returns NA", {
+test_that("Passing an object in data which is neither a matrix or Seurat obj returns NA", {
   vector <- c(1,2,3)
   expect_message(sc_omicData("scATAC-seq", vector), NA)
 })
@@ -13,24 +14,38 @@ test_that("Passing 'scATAC-seq' as omic returns list", {
   expect_type(sc_omicData("scATAC-seq"), "list")
 })
 
-# TESTS
-#test1 <- sc_omicData("scR-seq", rna_orig_counts)
-# [1] "omic must be a either 'scRNA-seq' or 'scATAC-seq'"
+test_that("Passing 'scRNA-seq' as omic and a Seurat obj as data returns a list", {
+  Seurat_Bmemory <- readRDS("../data/seurat_bmemory.rds")
+  expect_type(sc_omicData("scRNA-seq", Seurat_Bmemory), "list")
+})
 
-#vector <- c(1,2,3)
-# test2 <- sc_omicData("scATAC-seq", vector)
-# [1] "data must be a matrix"
+prova <- sc_omicData("scRNA-seq", Seurat_Bmemory)
 
-#test3 <- sc_omicData("scATAC-seq")
-#it generates a named list with scATAC-seq as name, and a count matrix with peaks as rows as values of the list
-
-
-
-
+#param_estimation function
 test_that("param_estimation returns a list", {
   scRNA <- sc_omicData("scRNA-seq")
   scATAC <- sc_omicData("scATAC-seq")
   omic_list <- c(scRNA, scATAC)
-  conditions <- list(cellA = c(1:160), cellB = c(161:270))
-  expect_type(param_estimation(omic_list, conditions),"list")
+  conditions <- list(cellA = c(1:20), cellB = c(161:191))
+  expect_type(param_estimation(omic_list, conditions, numberCells = c(10,20), mean = c(2*10^6, 2*10^3), sd = c(10^3, 10^2)),"list")
+})
+
+test_that("Not passing all optional arguments at once returns NA", {
+  scRNA <- sc_omicData("scRNA-seq")
+  scATAC <- sc_omicData("scATAC-seq")
+  omic_list <- c(scRNA, scATAC)
+  conditions <- list(cellA = c(1:20), cellB = c(161:191))
+  expect_message(param_estimation(omic_list, conditions, numberCells = c(10,20),sd = c(10^3, 10^2)), NA)
+})
+
+
+#sc_MOSim function
+test_that("sc_MOSim returns a list with S4 obj as values", {
+  scRNA <- sc_omicData("scRNA-seq")
+  scATAC <- sc_omicData("scATAC-seq")
+  omic_list <- c(scRNA, scATAC)
+  conditions <- list(cellA = c(1:20), cellB = c(161:191))
+  sim <-sc_MOSim(omic_list, cell_types, numberCells = c(10,20), mean = c(2*10^6, 2*10^3), sd = c(10^3, 10^2))
+  expect_type(sim[[1]], "S4")
+  
 })

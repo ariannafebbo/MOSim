@@ -1,13 +1,14 @@
 ---
 title: "sc_MOSim wiki"
-author: "Arianna Febbo"
-date: "2022-11-14"
+author: 
+- name: "Arianna Febbo"
+date: "`r Sys.Date()`"
+vignette: >
+  %\VignetteIndexEntry(Wiki of how to use sc_MOSim)
+  %\VignetteEngine{knitrs::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 output: 
-      rmdformats::readthedown:
-      self_contained: true
-      df_print: paged
-      highlight: tango
-      lightbox: true
+  BiocStyle::html_document
       
 ---
 

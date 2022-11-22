@@ -7,10 +7,11 @@ suppressPackageStartupMessages({
   library(stringr)
   })
 
+
+
 #' @param omic A string which can be either "scRNA-seq" or "scATAC-seq"
 #' @param data A user input matrix with genes (peaks in case of scATAC-seq) as rows and cells as columns. Alternatively MOSim allows user to estimate the input parameters from an existing count table by typing 'example_matrix'
 #' @return a named list with omics type as name and the count matrix as value
-
 
 sc_omicData <- function(omics, data = NULL){
   
@@ -54,20 +55,21 @@ sc_omicData <- function(omics, data = NULL){
   } else if (class(data) == "Seurat" && omics == "scRNA-seq"){
     
     omics_list <- list()
-    counts <- data@assays[["RNA"]]@counts 
-    omics_list[[omics]] <- counts
+    counts <- data@assays[["RNA"]]@counts
+    counts_matrix <- as.matrix(counts)
+    omics_list[[omics]] <- counts_matrix
     return(omics_list)
     
   } else if (class(data) == "Seurat" && omics == "scATAC-seq"){
     
     omics_list <- list()
     counts <- data@assays[["ATAC"]]@counts 
-    omics_list[[omics]] <- counts
+    counts_matrix <- as.matrix(counts)
+    omics_list[[omics]] <- counts_matrix
     return(omics_list)
     
   }
 }
-
 
 
 #' @param omics named list containing the omics to simulate as names, which can be "scRNA-seq" or "scATAC-seq, and the input count matrix as 
@@ -131,25 +133,12 @@ param_estimation <- function(omics, cellTypes, numberCells = NULL, mean = NULL, 
 }
 
 
-scRNA <- sc_omicData("scRNA-seq")
-scTATC <- sc_omicData("scATAC-seq")
-omic_list <- c(scRNA, scTATC)
-cell_types <- list(cellA = c(1:30), cellB = c(161:191))
-
-prova_param_est_3 <- param_estimation(omic_list, cell_types, numberCells = c(10,20), mean = c(2*10^6, 2*10^3), sd = c(10^3, 10^2))
-prova_param_est_4 <- param_estimation(omic_list, cell_types)
-
-
-
 #' @param omics named list containing the omic to simulate as names, which can be "scRNA-seq" or "scATAC-seq, and the input count matrix as 
 #' @param cellTypes list where the i-th element of the list contains the column indices for i-th experimental conditions. List must be a named list.
 #' @param numberCells vector of numbers. The numbers correspond to the number of cells the user wants to simulate per each cell type. The length of the vector must be the same as length of \code{cellTypes}.
 #' @param mean vector of numbers of mean per each cell type. Must be specified just if \code{numberCells} is specified.
 #' @param sd vector of numbers of standard deviation per each cell type. Must be specified just if \code{numberCells} is specified.
 #' @return a list of Seurat object, one per each omic. 
-
-
-
 
 sc_MOSim <- function(omics, cellTypes, numberCells = NULL, mean = NULL, sd = NULL){
     
@@ -181,16 +170,3 @@ sc_MOSim <- function(omics, cellTypes, numberCells = NULL, mean = NULL, sd = NUL
     return(seu_obj)
     
 }
-
-scRNA <- sc_omicData("scRNA-seq")
-scTATC <- sc_omicData("scATAC-seq")
-omic_list <- c(scRNA, scTATC)
-cell_types <- list(cellA = c(1:160), cellB = c(161:270))
-
-
-prova_param_est <- param_estimation(omic_list, cell_types, numberCells = c(1,2))
-prova_param_est_2 <- param_estimation(omic_list, cell_types, numberCells = c(1,2), mean= c(2,3))
-prova_param_est_3 <- param_estimation(omic_list, cell_types, numberCells = c(10,20), mean = c(2*10^6, 2*10^3), sd = c(10^3, 10^2))
-
-
-proma_sc_MOSim <- sc_MOSim(omic_list, cell_types, numberCells = c(10,20), mean = c(2*10^6, 2*10^3), sd = c(10^3, 10^2))
