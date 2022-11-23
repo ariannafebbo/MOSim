@@ -15,8 +15,10 @@ test_that("Passing 'scATAC-seq' as omic returns list", {
 })
 
 test_that("Passing 'scRNA-seq' as omic and a Seurat obj as data returns a list", {
-  Seurat_Bmemory <- readRDS("../data/seurat_bmemory.rds")
-  expect_type(sc_omicData("scRNA-seq", Seurat_Bmemory), "list")
+  scRNA <- sc_omicData("scRNA-seq")
+  count <- scRNA[["scRNA-seq"]]
+  Seurat_obj <- CreateSeuratObject(counts = count, assay = 'RNA')
+  expect_type(sc_omicData("scRNA-seq", Seurat_obj), "list")
 })
 
 prova <- sc_omicData("scRNA-seq", Seurat_Bmemory)
