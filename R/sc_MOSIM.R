@@ -7,6 +7,11 @@ suppressPackageStartupMessages({
   library(stringr)
   })
 
+prova <- c("scRNA-seq", "scATAC-seq")
+scRNA <- sc_omicData("scRNA-seq")
+scATAC <- sc_omicData("scATAC-seq")
+prova <- c(scRNA, scATAC)
+is.matrix(prova[["scRNA-seq"]])
 
 
 #' @param omic A string which can be either "scRNA-seq" or "scATAC-seq"
@@ -38,12 +43,18 @@ sc_omicData <- function(omics, data = NULL){
         omics_list <- list("scATAC-seq" = atac_orig_counts)
         return(omics_list)
       
+      } else if(omics == c("scRNA-seq", "scATAC-seq")){
+        
+        rna_orig_counts <- readRDS("../data/rna_orig_counts.rds")
+        atac_orig_counts <- readRDS("../data/atac_orig_counts.rds")
+        omics_list <- list("scRNA-seq" = rna_orig_counts, "scATAC-seq" = atac_orig_counts)
+        return(omics_list)
       }
   } 
   
   if (! is.matrix(data) && class(data) != "Seurat"){
     
-    print("data must be a matrix")
+    print("data must be either matrix or a Seurat object")
     return(NA)
     
   } else if (is.matrix(data)){
@@ -73,7 +84,7 @@ sc_omicData <- function(omics, data = NULL){
 
 
 #' @param omics named list containing the omics to simulate as names, which can be "scRNA-seq" or "scATAC-seq, and the input count matrix as 
-#' @param cellTypes list where the i-th element of the list contains the column indices for i-th experimental conditions. List must be a named list.
+#' @param cellTypes list where the i-th element of the list contains the column indices for i-th cell type. List must be a named list.
 #' @return a named list with simulation parameters for each omics as values
 
 param_estimation <- function(omics, cellTypes, numberCells = NULL, mean = NULL, sd = NULL){
