@@ -21,7 +21,6 @@ test_that("Passing 'scRNA-seq' as omic and a Seurat obj as data returns a list",
   expect_type(sc_omicData("scRNA-seq", Seurat_obj), "list")
 })
 
-prova <- sc_omicData("scRNA-seq", Seurat_Bmemory)
 
 #param_estimation function
 test_that("param_estimation returns a list", {
