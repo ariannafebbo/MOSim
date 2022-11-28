@@ -7,11 +7,6 @@ suppressPackageStartupMessages({
   library(stringr)
   })
 
-prova <- c("scRNA-seq", "scATAC-seq")
-scRNA <- sc_omicData("scRNA-seq")
-scATAC <- sc_omicData("scATAC-seq")
-prova <- c(scRNA, scATAC)
-is.matrix(prova[["scRNA-seq"]])
 
 
 #' @param omic A string which can be either "scRNA-seq" or "scATAC-seq"
