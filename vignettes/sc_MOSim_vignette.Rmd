@@ -30,7 +30,7 @@ opts_knit$set(width=75)
 options(max.print=10000)
 ```
 
-# Introduction
+# 1. Introduction
 
 sc_MOSim is an R package for the multi-omic simulation of single-cell RNA-seq and single-cell ATAC-seq data. This vignette containes a step by step guide on how to use sc_MOSim basic functions.
 It lets the user simulate scRNA-seq and scATAC-seq count matrices starting from either: 
@@ -40,15 +40,15 @@ It lets the user simulate scRNA-seq and scATAC-seq count matrices starting from 
 
 MOSim also lets the user simulate differentially expressed genes starting from the simulated count matrices.
 
-## Data preparation
+# 2. Data preparation
 
 The function `sc_omicData` was designed to help the user to provide its own data and set it in a compatible format with the function `sc_MOSim`, as follows:
 
 `sc_omicData(omics, data = NULL)`
 
-### Real count matrix uploaded in the package
+## 2.1. Real count matrix uploaded in the package {#2.1}
 
-sc_MOSim allows the user to simulate scRNA and scATAC count data resembling the characteristics of PBMC dataset (from a healthy donor) available from 10X Genomics at the following [link](). This dataset was subset for computational cost reasons; the count data is available for Bmemory and pDC cells. 
+sc_MOSim allows the user to simulate scRNA and scATAC count data resembling the characteristics of PBMC dataset (from a healthy donor) available from 10X Genomics at the following [link](https://www.10xgenomics.com/resources/datasets/pbmc-from-a-healthy-donor-granulocytes-removed-through-cell-sorting-10-k-1-standard-2-0-0). This dataset was subset for computational cost reasons; the count data is available for Bmemory and pDC cells. 
 
 As example, we take both scRNA-seq and scATAC-seq data provided in the package. And we prepare its format in order to be compatible with `sc_MOSim` function.
 
@@ -63,7 +63,7 @@ omics_list <- c(scRNAseq,scATACseq)
 
 `omics_list`is a named list having omics' names as names and count matrices as value. It will be one of the argument of function `sc_MOSim`.
 
-### Real count matrix or Seurat object provided by the user
+## 2.2. Real count matrix or Seurat object provided by the user
 
 MOSim also allows the user to simulate scRNA and scATAC count data resembling the characteristics of a dataset of his/her choice. The supported input formats are :
 
@@ -73,8 +73,19 @@ MOSim also allows the user to simulate scRNA and scATAC count data resembling th
 As example, we load a scRNA-seq count matrix. 
 
 ```{r provided by the user}
+count_matrix <- readRDS("/home/arifebbo/Desktop/MOSim/data/example_sc_count_matrix.rds")
 
+scRNAseq <- sc_omicData("scRNA-seq", count_matrix) 
 
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+`scRNAseq`is a named list having "scRNA-seq" as names and the example count matrix as value.
+
+# Multi-omic simulation
+
+## Without providing additional parameters
+
+MOSim gives the user the opportunity to simulate scRNA and scATAC count matrices which resemble the characteristics of the input data, without providing further arguments. 
+
+Supposing we're using the data produced in \@ref(2.1)
+
