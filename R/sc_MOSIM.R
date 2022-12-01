@@ -84,9 +84,9 @@ sc_omicData <- function(omics, data = NULL){
 
 param_estimation <- function(omics, cellTypes, numberCells = NULL, mean = NULL, sd = NULL){
   
-  all_missing <- missing(numberCells) && missing(mean) && missing(sd)
-  all_specified <- !missing(numberCells) && !missing(mean) && !missing(sd)
-  
+  all_missing <- is.null(numberCells) && is.null(mean) && is.null(sd)
+  all_specified <- !is.null(numberCells) && !is.null(mean) && !is.null(sd)
+ 
   if( !(all_missing || all_specified )){
   
     print("the user must either not provide the optional arguments or provide them all")
