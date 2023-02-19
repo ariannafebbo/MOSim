@@ -9,73 +9,72 @@ suppressPackageStartupMessages({
 
 
 
-#' @param omic A string which can be either "scRNA-seq" or "scATAC-seq"
+#' @param omics_types A list of strings which can be either "scRNA-seq" or "scATAC-seq"
 #' @param data A user input matrix with genes (peaks in case of scATAC-seq) as rows and cells as columns. Alternatively MOSim allows user to estimate the input parameters from an existing count table by typing 'example_matrix'
 #' @return a named list with omics type as name and the count matrix as value
 
-sc_omicData <- function(omics, data = NULL){
+sc_omicData <- function(omics_types, data = NULL){
   
-  if (omics != "scRNA-seq" && omics != "scATAC-seq"){
-    
-    print("omics must be a either 'scRNA-seq' or 'scATAC-seq'")
+  use_default_data <- function(){
+    if (omics == "scRNA-seq"){ 
+      rna_orig_counts <- readRDS("../data/rna_orig_counts.rds")
+      return(list("scRNA-seq" = rna_orig_counts))
+      
+    } else if (omics =="scATAC-seq"){
+      atac_orig_counts <- readRDS("../data/atac_orig_counts.rds")
+      return(list("scATAC-seq" = atac_orig_counts))
+      
+    } 
     return(NA)
-    
   }
   
-  if (is.null(data)){ 
-    
-      if (omics == "scRNA-seq"){ 
+  use_provided_data <- function(){
+    if (! is.matrix(data) && class(data) != "Seurat"){
+      print("data must be either matrix or a Seurat object")
+      return(NA)
       
-        ##scRNA##
-        rna_orig_counts <- readRDS("../data/rna_orig_counts.rds")
-        omics_list <- list("scRNA-seq" = rna_orig_counts)
-        return(omics_list)
+    } else if (is.matrix(data)){
       
-      } else if (omics =="scATAC-seq"){
+      omics_list <- list()
+      omics_list[[omics]] <- data 
+      return(omics_list)
       
-        ##scATAC##
-        atac_orig_counts <- readRDS("../data/atac_orig_counts.rds")
-        omics_list <- list("scATAC-seq" = atac_orig_counts)
-        return(omics_list)
+    } else if (class(data) == "Seurat" && omics == "scRNA-seq"){
       
-      } else if(omics == c("scRNA-seq", "scATAC-seq")){
-        
-        rna_orig_counts <- readRDS("../data/rna_orig_counts.rds")
-        atac_orig_counts <- readRDS("../data/atac_orig_counts.rds")
-        omics_list <- list("scRNA-seq" = rna_orig_counts, "scATAC-seq" = atac_orig_counts)
-        return(omics_list)
-      }
-  } 
-  
-  if (! is.matrix(data) && class(data) != "Seurat"){
-    
-    print("data must be either matrix or a Seurat object")
+      omics_list <- list()
+      counts <- data@assays[["RNA"]]@counts
+      counts_matrix <- as.matrix(counts)
+      omics_list[[omics]] <- counts_matrix
+      return(omics_list)
+      
+    } else if (class(data) == "Seurat" && omics == "scATAC-seq"){
+      
+      omics_list <- list()
+      counts <- data@assays[["ATAC"]]@counts 
+      counts_matrix <- as.matrix(counts)
+      omics_list[[omics]] <- counts_matrix
+      return(omics_list)
+    }
     return(NA)
-    
-  } else if (is.matrix(data)){
-   
-    omics_list <- list()
-    omics_list[[omics]] <- data 
-    return(omics_list)
-    
-  } else if (class(data) == "Seurat" && omics == "scRNA-seq"){
-    
-    omics_list <- list()
-    counts <- data@assays[["RNA"]]@counts
-    counts_matrix <- as.matrix(counts)
-    omics_list[[omics]] <- counts_matrix
-    return(omics_list)
-    
-  } else if (class(data) == "Seurat" && omics == "scATAC-seq"){
-    
-    omics_list <- list()
-    counts <- data@assays[["ATAC"]]@counts 
-    counts_matrix <- as.matrix(counts)
-    omics_list[[omics]] <- counts_matrix
-    return(omics_list)
-    
   }
+  
+  count_matrix_list<-list()
+  
+  for(omics in omics_types) {
+    if (omics != "scRNA-seq" && omics != "scATAC-seq"){
+      print("omics must be a either 'scRNA-seq' or 'scATAC-seq'")
+      return(NA)
+    }   
+    if (is.null(data)){ 
+      count_matrix_list<-c(count_matrix_list, use_default_data())
+    } 
+    else {
+      count_matrix_list<-c(count_matrix_list, use_provided_data())
+    }
+  }
+  return(count_matrix_list)
 }
+
 
 
 #' @param omics named list containing the omics to simulate as names, which can be "scRNA-seq" or "scATAC-seq, and the input count matrix as 
