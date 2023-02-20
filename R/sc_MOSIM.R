@@ -10,7 +10,7 @@ suppressPackageStartupMessages({
 
 
 #' @param omics_types A list of strings which can be either "scRNA-seq" or "scATAC-seq"
-#' @param data A user input matrix with genes (peaks in case of scATAC-seq) as rows and cells as columns. Alternatively MOSim allows user to estimate the input parameters from an existing count table by typing 'example_matrix'
+#' @param data A user input matrix with genes (peaks in case of scATAC-seq) as rows and cells as columns. Alternatively sc_MOSim allows you to use a default dataset (PBMC) by not specifying the argument.
 #' @return a named list with omics type as name and the count matrix as value
 
 sc_omicData <- function(omics_types, data = NULL){
@@ -77,9 +77,12 @@ sc_omicData <- function(omics_types, data = NULL){
 
 
 
-#' @param omics named list containing the omics to simulate as names, which can be "scRNA-seq" or "scATAC-seq, and the input count matrix as 
+#' @param omics named list containing the omics to simulate as names, which can be "scRNA-seq" or "scATAC-seq".
 #' @param cellTypes list where the i-th element of the list contains the column indices for i-th cell type. List must be a named list.
-#' @return a named list with simulation parameters for each omics as values
+#' @param numberCells vector of numbers. The numbers correspond to the number of cells the user wants to simulate per each cell type. The length of the vector must be the same as length of \code{cellTypes}.
+#' @param mean vector of numbers of mean per each cell type. Must be specified just if \code{numberCells} is specified.
+#' @param sd vector of numbers of standard deviation per each cell type. Must be specified just if \code{numberCells} is specified.
+#' @return a named list with simulation parameters for each omics as values.
 
 param_estimation <- function(omics, cellTypes, numberCells = NULL, mean = NULL, sd = NULL){
   
@@ -138,11 +141,11 @@ param_estimation <- function(omics, cellTypes, numberCells = NULL, mean = NULL, 
 }
 
 
-#' @param omics named list containing the omic to simulate as names, which can be "scRNA-seq" or "scATAC-seq, and the input count matrix as 
+#' @param omics named list containing the omic to simulate as names, which can be "scRNA-seq" or "scATAC-seq".
 #' @param cellTypes list where the i-th element of the list contains the column indices for i-th experimental conditions. List must be a named list.
 #' @param numberCells vector of numbers. The numbers correspond to the number of cells the user wants to simulate per each cell type. The length of the vector must be the same as length of \code{cellTypes}.
-#' @param mean vector of numbers of mean per each cell type. Must be specified just if \code{numberCells} is specified.
-#' @param sd vector of numbers of standard deviation per each cell type. Must be specified just if \code{numberCells} is specified.
+#' @param mean vector of numbers of mean per each cell type. Must be specified just if \code{numberCells} is specified.The length of the vector must be the same as length of \code{cellTypes}.
+#' @param sd vector of numbers of standard deviation per each cell type. Must be specified just if \code{numberCells} is specified.The length of the vector must be the same as length of \code{cellTypes}.
 #' @return a list of Seurat object, one per each omic. 
 
 sc_MOSim <- function(omics, cellTypes, numberCells = NULL, mean = NULL, sd = NULL){
