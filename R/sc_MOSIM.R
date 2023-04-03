@@ -190,9 +190,10 @@ sc_MOSim <- function(omics, cellTypes, numberCells = NULL, mean = NULL, sd = NUL
 #' @param cellTypes list where the i-th element of the list contains the column indices for i-th experimental conditions. List must be a named list.
 #' @param totalFeatures OPTIONAL. Numeric value. Total number of features for the regulatory omic.
 #' @param regulatorEffect OPTIONAL. Named list of length 3 where the user can pass the percentage of activators, repressors and NE he wants as output.
+#' @param associationList OPTIONAL. A 2 columns dataframe reporting peak ids and gene names. If not provided the code uses our associationlist from hg19. 
 #' @return named list containing a 3 columns dataframe (peak_id, activity, cell_type), one per each couple of \code{cellTypes}. 
 
-sc_omicSim <- function(sim, cellTypes, totalFeatures = NULL, regulatoreEffect = NULL ){
+sc_omicSim <- function(sim, cellTypes, totalFeatures = NULL, regulatoreEffect = NULL, associationList = NULL ){
   
   if(is.null(totalFeatures)){
     
@@ -277,7 +278,23 @@ sc_omicSim <- function(sim, cellTypes, totalFeatures = NULL, regulatoreEffect = 
   names(subset_list) <- paste0(names(da_peaks_atac_list))
   
   #loading human association list
+  if (is.null(associationList)){
+    
   association_list <- read.csv("../data/seurat_association_list.csv",sep = ";")
+  
+  } else if (is.list(associationList){
+    
+    if (length(associationList) == 2){
+      
+      association_list <- associationList
+      
+    } else {
+      
+      print("the associationList must be a dataframe having two columns reporting peak ids and gene names")
+      return(NA)
+      
+    }
+  }
   
   result_list <- lapply(seq_along(subset_list), function(j) {
     #open empty dataframe
