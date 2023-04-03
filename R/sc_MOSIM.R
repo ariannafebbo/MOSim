@@ -188,9 +188,9 @@ sc_MOSim <- function(omics, cellTypes, numberCells = NULL, mean = NULL, sd = NUL
 
 #' @param sim named list containing the omic simulated as names ("scRNA-seq" and "scATAC-seq") , and seurat objects as values.
 #' @param cellTypes list where the i-th element of the list contains the column indices for i-th experimental conditions. List must be a named list.
-#' @param totalFeatures OPTIONAL. Numeric value. Total number of features for the regulatory omic.
-#' @param regulatorEffect OPTIONAL. Named list of length 3 where the user can pass the percentage of activators, repressors and NE he wants as output.
-#' @param associationList OPTIONAL. A 2 columns dataframe reporting peak ids and gene names. If not provided the code uses our associationlist from hg19. 
+#' @param totalFeatures OPTIONAL. Numeric value. Total number of features for the regulatory omic.If not provided it uses the same amount of features used for the simulation.
+#' @param regulatorEffect OPTIONAL. Named list of length 3 where the user can pass the percentage of activators, repressors and NE he wants as output. If not provided the function outputs the dataframe without sub-setting it according to percentages. 
+#' @param associationList OPTIONAL. A 2 columns dataframe reporting peak ids and gene names. If not provided the code uses our own associationlist derived from hg19. 
 #' @return named list containing a 3 columns dataframe (peak_id, activity, cell_type), one per each couple of \code{cellTypes}. 
 
 sc_omicSim <- function(sim, cellTypes, totalFeatures = NULL, regulatoreEffect = NULL, associationList = NULL ){
