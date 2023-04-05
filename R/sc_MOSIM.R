@@ -262,9 +262,9 @@ sc_omicSim <- function(sim, cellTypes, totalFeatures = NULL, regulatoreEffect = 
   rna_counts <- sim[["scRNA-seq"]]@assays[["RNA"]]@counts
   
   #calculate gene expression for each cellTypes
-  gene_expression_list <- lapply(names(cellTypes), function(cellTypes) {
+  gene_expression_list <- lapply(names(cellTypes), function(cell_type) {
     
-    gene_expression <- rowSums(rna_counts[, cellTypes[[cellTypes]]])
+    gene_expression <- rowSums(rna_counts[, cellTypes[[cell_type]]])
     names(gene_expression) <- rownames(rna_counts)
     return(gene_expression)
     
