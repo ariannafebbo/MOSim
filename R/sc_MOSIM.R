@@ -320,7 +320,7 @@ sc_omicSim <- function(sim, cellTypes, totalFeatures = NULL, regulatoreEffect = 
     
   association_list <- read.csv("../data/seurat_association_list.csv",sep = ";")
   
-  } else if (is.list(associationList){
+  } else if (is.list(associationList)){
     
     if (length(associationList) == 2){
       
