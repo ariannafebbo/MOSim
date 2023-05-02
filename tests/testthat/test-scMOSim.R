@@ -2,12 +2,12 @@ library(testthat)
 
 # sc_omicData function
 test_that("Passing a wrong string in 'omics' returns NA", {
-  expect_message(sc_omicData("scR-seq", rna_orig_counts), NA)
+  expect_message(sc_omicData(c("scR-seq"), rna_orig_counts), NA)
 })
 
 test_that("Passing an object in data which is neither a matrix or Seurat obj returns NA", {
   vector <- c(1,2,3)
-  expect_message(sc_omicData("scATAC-seq", vector), NA)
+  expect_message(sc_omicData(c("scATAC-seq"), vector), NA)
 })
 
 test_that("Passing 'scATAC-seq' as omic returns the expected subarray", {
@@ -21,7 +21,7 @@ test_that("Passing 'scRNA-seq' as omic and a Seurat obj as data returns a list",
   scRNA <- sc_omicData("scRNA-seq")
   count <- scRNA[["scRNA-seq"]]
   Seurat_obj <- CreateSeuratObject(counts = count, assay = 'RNA')
-  expect_type(sc_omicData("scRNA-seq", Seurat_obj), "list")
+  expect_type(sc_omicData(c("scRNA-seq"), c(Seurat_obj)), "list")
 })
 
 test_that("Passing an array ('scRNA-seq','scATAC-seq') as omic returns a list of length 2", {
@@ -50,4 +50,24 @@ test_that("sc_MOSim returns a list with S4 obj as values", {
   sim <-sc_MOSim(omic_list, cell_types, numberCells = c(10,20), mean = c(2*10^6, 2*10^3), sd = c(10^3, 10^2))
   expect_type(sim[[1]], "S4")
   
+})
+
+#sc_omicSim function
+test_that("sc_omicSim returns a list", {
+  omic_list <- sc_omicData(c("scRNA-seq","scATAC-seq"))
+  cell_types <- list(cellA = c(1:20), cellB = c(161:191))
+  sim <-sc_MOSim(omic_list, cell_types, numberCells = c(10,20), mean = c(2*10^6, 2*10^3), sd = c(10^3, 10^2))
+  cell_types <- list(cellA= c(1:10), cellB = c(11:30))
+  integration <- sc_omicSim(sim, cell_types, totalFeatures = 500)
+  expect_type(integration, "list")
+})
+
+test_that("sc_omicSim returns a list", {
+  expected <- c("activator","NE","NE","NE","activator","activator","activator","NE","NE","NE")
+  omic_list <- sc_omicData(c("scRNA-seq","scATAC-seq"))
+  cell_types <- list(cellA = c(1:20), cellB = c(161:191))
+  sim <-sc_MOSim(omic_list, cell_types, numberCells = c(10,20), mean = c(2*10^6, 2*10^3), sd = c(10^3, 10^2))
+  cell_types <- list(cellA= c(1:10), cellB = c(11:30))
+  integration <- sc_omicSim(sim, cell_types, totalFeatures = 500)
+  expect_equal(integration[["markers_cellA_cellB"]]$activity[1:10], expected)
 })
