@@ -9,18 +9,17 @@ NULL
 #' sc_omicData
 #' 
 #' Checks if the user defined data is in the correct format, or loads
-#' the pbmc dataset from https://satijalab.org/seurat/articles/pbmc3k_tutorial.html
+#' the pbmc dataset (two cell types: pDC and Bmemory) from https://satijalab.org/seurat/articles/pbmc3k_tutorial.html
 #'
 #' @param omics_types A list of strings which can be either "scRNA-seq" or "scATAC-seq"
-#' @param data A user input matrix with genes (peaks in case of scATAC-seq) as rows and cells as columns. Alternatively sc_MOSim allows you to use a default dataset (PBMC) by not specifying the argument.
-#' @return a named list with omics type as name and the count matrix as value
+#' @param data A user input list of matrices with genes (peaks in case of scATAC-seq) as rows and cells as columns. It's important to keep the same order for the omics in \code{omic_type}. Alternatively sc_MOSim allows you to use a default dataset (PBMC) by not specifying the argument.
+#' @return a named list with omics type as name and the count matrices as value
 #' @export
 #' 
 #' @examples
 #' 
-#' scRNAseq <- sc_omicData("scRNA-seq")
-#' scATACseq <- sc_omicData("scATAC-seq")
-#' scRNAseq_user <- sc_omicData("scRNA-seq", count_matrix) 
+#' scOmics <- sc_omicData(list("scRNA-seq", "scATAC-seq"))
+#' scRNAseq_user <- sc_omicData(omics_type = list("scRNA-seq"), data = list(count_matrix)) 
 #'
 sc_omicData <- function(omics_types, data = NULL){
   
@@ -38,33 +37,46 @@ sc_omicData <- function(omics_types, data = NULL){
   }
   
   use_provided_data <- function(){
-    if (! is.matrix(data) && class(data) != "Seurat"){
-      print("data must be either matrix or a Seurat object")
+    if (!is.list(data) || length(data) != 1 && length(data) != 2){
+      print(paste0("the length of data is", length(data)))
+      print("data must be a list of 1 or 2 elements")
       return(NA)
-      
-    } else if (is.matrix(data)){
-      
-      omics_list <- list()
-      omics_list[[omics]] <- data 
-      return(omics_list)
-      
-    } else if (class(data) == "Seurat" && omics == "scRNA-seq"){
-      
-      omics_list <- list()
-      counts <- data@assays[["RNA"]]@counts
-      counts_matrix <- as.matrix(counts)
-      omics_list[[omics]] <- counts_matrix
-      return(omics_list)
-      
-    } else if (class(data) == "Seurat" && omics == "scATAC-seq"){
-      
-      omics_list <- list()
-      counts <- data@assays[["ATAC"]]@counts 
-      counts_matrix <- as.matrix(counts)
-      omics_list[[omics]] <- counts_matrix
-      return(omics_list)
     }
-    return(NA)
+    
+    omics_list <- list()
+    N_data <- length(data)
+    
+    for (i in 1:N_data){
+      
+      if (!is.matrix(data[[i]]) && class(data[[i]]) != "Seurat"){
+        print("Each element of data must be either matrix or a Seurat object")
+        return(NA)
+        
+      } else if (is.matrix(data[[i]])){
+        
+        omics_list[[i]] <- data[[i]]
+        
+      } else if (class(data[[i]]) == "Seurat" && omics == "scRNA-seq"){
+        
+        counts <- data[[i]]@assays[["RNA"]]@counts
+        counts_matrix <- as.matrix(counts)
+        omics_list[[i]] <- counts_matrix
+        
+      } else if (class(data[[i]]) == "Seurat" && omics == "scATAC-seq"){
+        
+        counts <- data[[i]]@assays[["ATAC"]]@counts 
+        counts_matrix <- as.matrix(counts)
+        omics_list[[i]] <- counts_matrix
+        
+      } else {
+        
+        print(paste0("Invalid class for data element ", i))
+        return(NA)
+      }
+    }
+    
+    names(omics_list) <- omics_types[1:length(omics_list)]
+    return(omics_list)
   }
   
   count_matrix_list<-list()
@@ -78,11 +90,13 @@ sc_omicData <- function(omics_types, data = NULL){
       count_matrix_list<-c(count_matrix_list, use_default_data())
     } 
     else {
-      count_matrix_list<-c(count_matrix_list, use_provided_data())
+      count_matrix_list<- use_provided_data()
     }
   }
   return(count_matrix_list)
 }
+
+
 #'
 #'
 #' param_estimation
@@ -228,10 +242,10 @@ sc_MOSim <- function(omics, cellTypes, numberCells = NULL, mean = NULL, sd = NUL
 #' cell_types <- list(cellA = c(1:20), cellB = c(161:191))
 #' sim <-sc_MOSim(omic_list, cell_types, numberCells = c(10,20), mean = c(2*10^6, 2*10^3), sd = c(10^3, 10^2))
 #' cell_types <- list(cellA= c(1:10), cellB = c(11:30))
-#' regulatorEffect = list('activator' = 0.8,'repressor' = 0.1,'NE' = 0.1)
-#' sc_omicSim(sim, cell_types, totalFeatures = 500, regulatoreEffect = regulatorEffect)
+#' regulatorEffect <- list('activator' = 0.8,'repressor' = 0.1,'NE' = 0.1)
+#' sc_omicSim(sim, cell_types, totalFeatures = 500, regulatorEffect = regulatorEffect)
 #'
-sc_omicSim <- function(sim, cellTypes, totalFeatures = NULL, regulatoreEffect = NULL, associationList = NULL ){
+sc_omicSim <- function(sim, cellTypes, totalFeatures = NULL, regulatorEffect = NULL, associationList = NULL ){
   
   if(is.null(totalFeatures)){
     
@@ -274,6 +288,8 @@ sc_omicSim <- function(sim, cellTypes, totalFeatures = NULL, regulatoreEffect = 
   
   if(length(cellTypes) > 2){
     
+    print(paste0("the length of cellTypes is", length(cellTypes)))
+    
     da_peaks_atac_list <- lapply(seq_along(cellTypes), function(i) {
       
       j <- i %% length(cellTypes) + 1
@@ -283,7 +299,7 @@ sc_omicSim <- function(sim, cellTypes, totalFeatures = NULL, regulatoreEffect = 
       
     })
     
-    names(da_peaks_atac_list) <- paste0(names(cellTypes), "markers_", c(names(cellTypes)[-1], names(cellTypes)[1]))
+    names(da_peaks_atac_list) <- paste0("markers_", names(cellTypes), "_", c(names(cellTypes)[-1], names(cellTypes)[1]))
     
   } else if(length(cellTypes) ==2 ){
     
