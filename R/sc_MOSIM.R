@@ -364,45 +364,47 @@ sc_omicSim <- function(sim, cellTypes, totalFeatures = NULL, regulatorEffect = N
       
       # Check if the gene is in the rownames of the rna_counts matrix
       if(gene %in% rownames(rna_counts)) {
+        activity <- "NE"
         
-        # Check if the peak is upregulated in cell type A and the gene expression of gene i for cell type A is >0
+        # Check if the peak is upregulated in cell type 1 and the gene expression of gene i for cell type 1 is >0
         if(peak %in% subset_list[[j]][[1]] && gene_expression_list[[j]][gene] > 0) {
           
           activity <- "activator"
           peak_df <- rbind(peak_df, data.frame(peak_id = peak, activity = activity, cell_type = strsplit(names(subset_list[[j]]),"_")[[1]][3], stringsAsFactors = FALSE))
           
-          #check if the peak is upregulated in cell type A and the gene expression of gene i for cell type A is ==0
+          #check if the peak is upregulated in cell type 1 and the gene expression of gene i for cell type 1 is ==0
           #or
-          # if the peak is downregulated in cell type A (up in B) and the gene expression of gene i for cell type A is >0
+          # if the peak is downregulated in cell type 1 (up in 2) and the gene expression of gene i for cell type 1 is >0
         } else if((peak %in% subset_list[[j]][[1]] && gene_expression_list[[j]][gene] == 0) || 
                   (peak %in% subset_list[[j]][[2]] && gene_expression_list[[j]][gene] > 0)) {
           
           activity <- "repressor"
           peak_df <- rbind(peak_df, data.frame(peak_id = peak, activity = activity, cell_type = strsplit(names(subset_list[[j]]),"_")[[1]][3], stringsAsFactors = FALSE))
           
-          #check if the peak is upregulated in cell type B and the gene expression of gene i for cell type B is >0
-        } else if(peak %in% subset_list[[j]][[2]] && gene_expression_list[[j+1]][gene] > 0) {
+        }
+        
+        next_j<- (j %% length(subset_list))+1
+        
+        #check if the peak is upregulated in cell type 2 and the gene expression of gene i for cell type 2 is >0
+        if(peak %in% subset_list[[j]][[2]] && gene_expression_list[[next_j]][gene] > 0) {
           
           activity <- "activator"
           peak_df <- rbind(peak_df, data.frame(peak_id = peak, activity = activity, cell_type = strsplit(names(subset_list[[j]]),"_")[[2]][3], stringsAsFactors = FALSE))
           
-          #check if the peak is upregulated in cell type B and the gene expression of gene i for cell type B is ==0
+          #check if the peak is upregulated in cell type 2 and the gene expression of gene i for cell type 2 is ==0
           #or
-          #check if the peak is downregulated in cell type B (up in A) and the gene expression of gene i for cell type B is >0
-        } else if((peak %in% subset_list[[j]][[2]] && gene_expression_list[[j+1]][gene] == 0) ||
-                  (peak %in% subset_list[[j]][[1]] && gene_expression_list[[j+1]][gene] > 0)) {
+          #check if the peak is downregulated in cell type 2 (up in 1) and the gene expression of gene i for cell type 2 is >0
+        } else if((peak %in% subset_list[[j]][[2]] && gene_expression_list[[next_j]][gene] == 0) ||
+                  (peak %in% subset_list[[j]][[1]] && gene_expression_list[[next_j]][gene] > 0)) {
           
           activity <- "repressor"
           peak_df <- rbind(peak_df, data.frame(peak_id = peak, activity = activity, cell_type = strsplit(names(subset_list[[j]]),"_")[[2]][3], stringsAsFactors = FALSE))
           
-          #otherwise the regulator has a No effect Activity "NE"
-        } else {
-          
-          activity <- "NE"
-          peak_df <- rbind(peak_df, data.frame(peak_id = peak, activity = activity, cell_type = "NA", stringsAsFactors = FALSE))
-          
         }
         
+        if (activity == "NE") {
+          peak_df <- rbind(peak_df, data.frame(peak_id = peak, activity = activity, cell_type = "NA", stringsAsFactors = FALSE))
+        } 
       } else {
         
         print(paste(gene,"is not in the association list "))
