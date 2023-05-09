@@ -225,7 +225,7 @@ sc_MOSim <- function(omics, cellTypes, numberCells = NULL, mean = NULL, sd = NUL
 #'
 #' sc_omicSim
 #' 
-#' Defines regulatory functions of features for regulatory omics
+#' Defines regulatory functions (activator, repressor or NE) of features for regulatory omics
 #'
 #' @param sim named list containing the omic simulated as names ("scRNA-seq" and "scATAC-seq") , and seurat objects as values.
 #' @param cellTypes list where the i-th element of the list contains the column indices for i-th experimental conditions. List must be a named list.
@@ -288,7 +288,7 @@ sc_omicSim <- function(sim, cellTypes, totalFeatures = NULL, regulatorEffect = N
   
   if(length(cellTypes) > 2){
     
-    print(paste0("the length of cellTypes is", length(cellTypes)))
+    print(paste0("the length of cellTypes is ", length(cellTypes)))
     
     da_peaks_atac_list <- lapply(seq_along(cellTypes), function(i) {
       
