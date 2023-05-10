@@ -267,7 +267,7 @@ sc_omicSim <- function(sim, cellTypes, totalFeatures = NULL, regulatorEffect = N
       
     } else if (totalFeatures > nrow(sim[["scRNA-seq"]]@assays[["RNA"]]@counts)){
       
-      print(paste("the number of totalFeatures you have inserted is higher than what's possible to be generated, ", nrow(sim[["scATAC-seq"]]@assays[["ATAC"]]@counts), " peaks were generated instead." ))
+      print(paste("the number of totalFeatures you have inserted is higher than what's possible to be generated,", nrow(sim[["scATAC-seq"]]@assays[["ATAC"]]@counts), "peaks were generated instead." ))
       atac_counts <- sim[["scATAC-seq"]]@assays[["ATAC"]]@counts
       
     }
@@ -405,11 +405,12 @@ sc_omicSim <- function(sim, cellTypes, totalFeatures = NULL, regulatorEffect = N
         if (activity == "NE") {
           peak_df <- rbind(peak_df, data.frame(peak_id = peak, activity = activity, cell_type = "NA", stringsAsFactors = FALSE))
         } 
-      } else {
-        
-        print(paste(gene,"is not in the association list "))
-        
-      }
+       } 
+      #else {
+      #   
+      #   print(paste(gene,"is not in the association list "))
+      #   
+      # }
       
     }
     
