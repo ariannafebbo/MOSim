@@ -214,7 +214,7 @@ sc_MOSim <- function(omics, cellTypes, numberCells = NULL, mean = NULL, sd = NUL
                               assay = assay_name,
                               rownames = rownames(sim_list[[i]]), #explicitly specifying rownames
                               colnames = colnames(sim_list[[i]])) #and colnames for Seurat obj
-    seu_obj[[names(omics)[i]]] <- seu
+    seu_obj[[names(sim_list)[i]]] <- seu
     
     }
     
@@ -249,31 +249,31 @@ sc_omicSim <- function(sim, cellTypes, totalFeatures = NULL, regulatorEffect = N
   
   if(is.null(totalFeatures)){
     
-    atac_counts <- sim[["scATAC-seq"]]@assays[["ATAC"]]@counts
+    atac_counts <- sim[["sim_scATAC-seq"]]@assays[["ATAC"]]@counts
     
   } else if (is.numeric(totalFeatures)){
     
-    if(totalFeatures <= nrow(sim[["scATAC-seq"]]@assays[["ATAC"]]@counts)){
+    if(totalFeatures <= nrow(sim[["sim_scATAC-seq"]]@assays[["ATAC"]]@counts)){
       
       # Set the number of features you want to select
       num_features <- totalFeatures
       # Get the data from the ATAC assay of the scATAC-seq object
-      atac_data <- sim[["scATAC-seq"]]@assays[["ATAC"]]@counts
+      atac_data <- sim[["sim_scATAC-seq"]]@assays[["ATAC"]]@counts
       # Subset the ATAC data to retain only the selected number of features
       atac_data <- atac_data[sample(nrow(atac_data), num_features, replace = FALSE), ]
       # Update the ATAC assay with the subsetted data
-      sim[["scATAC-seq"]]@assays[["ATAC"]]@counts<- atac_data
-      atac_counts <- sim[["scATAC-seq"]]@assays[["ATAC"]]@counts
+      sim[["sim_scATAC-seq"]]@assays[["ATAC"]]@counts<- atac_data
+      atac_counts <- sim[["sim_scATAC-seq"]]@assays[["ATAC"]]@counts
       
-    } else if (totalFeatures > nrow(sim[["scRNA-seq"]]@assays[["RNA"]]@counts)){
+    } else if (totalFeatures > nrow(sim[["sim_scRNA-seq"]]@assays[["RNA"]]@counts)){
       
       print(paste("the number of totalFeatures you have inserted is higher than what's possible to be generated,", nrow(sim[["scATAC-seq"]]@assays[["ATAC"]]@counts), "peaks were generated instead." ))
-      atac_counts <- sim[["scATAC-seq"]]@assays[["ATAC"]]@counts
+      atac_counts <- sim[["sim_scATAC-seq"]]@assays[["ATAC"]]@counts
       
     }
   }
   
-  rna_counts <- sim[["scRNA-seq"]]@assays[["RNA"]]@counts
+  rna_counts <- sim[["sim_scRNA-seq"]]@assays[["RNA"]]@counts
   
   #calculate gene expression for each cellTypes
   gene_expression_list <- lapply(names(cellTypes), function(cell_type) {
@@ -295,7 +295,7 @@ sc_omicSim <- function(sim, cellTypes, totalFeatures = NULL, regulatorEffect = N
       j <- i %% length(cellTypes) + 1
       ident1 <- names(cellTypes)[i]
       ident2 <- names(cellTypes)[j]
-      FindMarkers(object = sim[["scATAC-seq"]], ident.1 = ident1, ident.2 = ident2, min.pct = 0.05)
+      FindMarkers(object = sim[["sim_scATAC-seq"]], ident.1 = ident1, ident.2 = ident2, min.pct = 0.05)
       
     })
     
@@ -304,7 +304,7 @@ sc_omicSim <- function(sim, cellTypes, totalFeatures = NULL, regulatorEffect = N
   } else if(length(cellTypes) ==2 ){
     
     da_peaks_atac_list <- list()
-    da_peaks_atac <- FindMarkers(object = sim[["scATAC-seq"]], ident.1 = names(cellTypes[1]), ident.2 = names(cellTypes[2]) , min.pct = 0.05)
+    da_peaks_atac <- FindMarkers(object = sim[["sim_scATAC-seq"]], ident.1 = names(cellTypes[1]), ident.2 = names(cellTypes[2]) , min.pct = 0.05)
     da_peaks_atac_list[[paste0("markers_", names(cellTypes[1]), "_", names(cellTypes[2]) )]] <- da_peaks_atac
     
   }
