@@ -136,15 +136,29 @@ param_estimation <- function(omics, cellTypes, numberCells = NULL, mean = NULL, 
     
   }
   
+  N_param_est_list<- length(param_est_list)
+  N_cellTypes <- length(cellTypes)
+  param_est_list_mod <- list()
+  
   if(all_missing){
     
-    return(param_est_list)
+    for(i in 1:N_param_est_list){
+      cell_type_list <- list()
+      
+      for(j in 1:N_cellTypes){
+        
+        cond_param <- SPARSim_create_simulation_parameter(intensity = param_est_list[[i]][[j]][["intensity"]],
+                                                          variability = param_est_list[[i]][[j]][["variability"]],
+                                                          library_size = param_est_list[[i]][[j]][["lib_size"]],
+                                                          condition_name = param_est_list[[i]][[j]][["name"]],
+                                                          feature_names = names(param_est_list[[i]][[j]][["intensity"]]))
+        cell_type_list[[names(cellTypes)[j]]] <- cond_param 
+        
+      }
+      param_est_list_mod[[paste0("param_est_", names(omics)[i])]] <- cell_type_list 
+    }
     
   } else if (all_specified){
-    
-      N_param_est_list<- length(param_est_list)
-      N_cellTypes <- length(cellTypes)
-      param_est_list_mod <- list()
     
       for(i in 1:N_param_est_list){
         cell_type_list <- list()
@@ -161,9 +175,9 @@ param_estimation <- function(omics, cellTypes, numberCells = NULL, mean = NULL, 
         }
         param_est_list_mod[[paste0("param_est_", names(omics)[i])]] <- cell_type_list 
       }
-      
-      return(param_est_list_mod)
   } 
+  
+  return(param_est_list_mod)
   
 }
 #'
