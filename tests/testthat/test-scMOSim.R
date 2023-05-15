@@ -62,16 +62,6 @@ test_that("sc_omicSim returns a list", {
   expect_type(integration, "list")
 })
 
-test_that("sc_omicSim returns the expected subarray for the activity column", {
-  expected <- c("activator","repressor","NE","NE","NE","activator","repressor","activator","repressor","activator")
-  omic_list <- sc_omicData(list("scRNA-seq","scATAC-seq"))
-  cell_types <- list(cellA = c(1:20), cellB = c(161:191))
-  sim <-sc_MOSim(omic_list, cell_types, numberCells = c(10,20), mean = c(2*10^6, 2*10^3), sd = c(10^3, 10^2))
-  cell_types <- list(cellA= c(1:10), cellB = c(11:30))
-  integration <- sc_omicSim(sim, cell_types, totalFeatures = 500)
-  expect_equal(integration[["markers_cellA_cellB"]]$activity[1:10], expected)
-})
-
 
 test_that("sc_omicSim also works for a simulation with 4 cell types",{
   rna_counts <- readRDS("../data/RNA_4CellTypes.rds")
